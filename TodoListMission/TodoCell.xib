@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="TodoCell" rowHeight="168" id="7rf-Hf-gxd" customClass="TodoCell" customModule="TodoListMission" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="422" height="168"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="7rf-Hf-gxd" id="gtN-kI-lf6">
+                <rect key="frame" x="0.0" y="0.0" width="422" height="168"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="751" text="todoID: 01" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2mn-q3-zww">
+                        <rect key="frame" x="20" y="9.9999999999999982" width="77.666666666666671" height="20.333333333333329"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="할일 내용" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5Br-sJ-ks6">
+                        <rect key="frame" x="20" y="60.333333333333336" width="262" height="97.666666666666657"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <stackView opaque="NO" contentMode="scaleToFill" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="OyW-5f-1vv">
+                        <rect key="frame" x="292" y="10" width="120" height="37"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dV9-QC-Wu0">
+                                <rect key="frame" x="0.0" y="0.0" width="59" height="37"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="수정"/>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0VU-dY-irC">
+                                <rect key="frame" x="61" y="0.0" width="59" height="37"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="삭제">
+                                    <color key="baseBackgroundColor" systemColor="systemPurpleColor"/>
+                                </buttonConfiguration>
+                            </button>
+                        </subviews>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="120" id="2Oj-ih-K7B"/>
+                        </constraints>
+                    </stackView>
+                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="wWB-bk-JqI">
+                        <rect key="frame" x="363" y="87" width="51" height="31"/>
+                    </switch>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="wWB-bk-JqI" firstAttribute="top" secondItem="OyW-5f-1vv" secondAttribute="bottom" constant="40" id="2ur-bc-d5n"/>
+                    <constraint firstItem="dV9-QC-Wu0" firstAttribute="leading" secondItem="5Br-sJ-ks6" secondAttribute="trailing" constant="10" id="4YY-yA-O6b"/>
+                    <constraint firstItem="2mn-q3-zww" firstAttribute="leading" secondItem="gtN-kI-lf6" secondAttribute="leading" constant="20" symbolic="YES" id="4nw-7F-tKV"/>
+                    <constraint firstItem="5Br-sJ-ks6" firstAttribute="leading" secondItem="2mn-q3-zww" secondAttribute="leading" id="6Kx-pv-fwO"/>
+                    <constraint firstItem="OyW-5f-1vv" firstAttribute="top" secondItem="2mn-q3-zww" secondAttribute="top" id="NHK-gm-m8P"/>
+                    <constraint firstItem="2mn-q3-zww" firstAttribute="top" secondItem="gtN-kI-lf6" secondAttribute="top" constant="10" id="TZf-F9-Hcu"/>
+                    <constraint firstItem="wWB-bk-JqI" firstAttribute="trailing" secondItem="OyW-5f-1vv" secondAttribute="trailing" id="cd0-Hw-xpc"/>
+                    <constraint firstAttribute="trailing" secondItem="OyW-5f-1vv" secondAttribute="trailing" constant="10" id="cmU-ij-XFo"/>
+                    <constraint firstItem="5Br-sJ-ks6" firstAttribute="top" secondItem="2mn-q3-zww" secondAttribute="bottom" constant="30" id="ikj-pt-tjP"/>
+                    <constraint firstAttribute="bottom" secondItem="wWB-bk-JqI" secondAttribute="bottom" constant="50" id="jkD-mP-zje"/>
+                    <constraint firstAttribute="bottom" secondItem="5Br-sJ-ks6" secondAttribute="bottom" constant="10" id="vQF-FU-wJ7"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="deleteBtn" destination="0VU-dY-irC" id="lIq-zX-co5"/>
+                <outlet property="editBtn" destination="dV9-QC-Wu0" id="UUr-6Q-UaR"/>
+                <outlet property="selectedSwitch" destination="wWB-bk-JqI" id="gSD-Vv-jc9"/>
+                <outlet property="todoContent" destination="5Br-sJ-ks6" id="3OO-4o-jzn"/>
+                <outlet property="todoID" destination="2mn-q3-zww" id="B6e-tJ-jI3"/>
+            </connections>
+            <point key="canvasLocation" x="-58.015267175572518" y="18.30985915492958"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <systemColor name="systemPurpleColor">
+            <color red="0.68627450980392157" green="0.32156862745098042" blue="0.87058823529411766" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>

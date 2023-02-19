@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Edit Todo Model-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="EditTodoModel" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Y6W-OH-hqX" customClass="EditTodoModel" customModule="TodoListMission" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="Opu-fx-Z3g">
+                                <rect key="frame" x="46" y="260" width="301" height="205"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="할일 수정" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pih-2e-gfN">
+                                        <rect key="frame" x="118.99999999999999" y="20" width="63.333333333333329" height="20.333333333333329"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ID: " textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WtQ-MJ-Mmx">
+                                        <rect key="frame" x="141.66666666666666" y="50.333333333333314" width="17.666666666666657" height="13.333333333333336"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="기존 할일: " textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="U5P-vo-ss3">
+                                        <rect key="frame" x="126.66666666666666" y="68.666666666666686" width="48" height="13.333333333333329"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="예) 빡코딩하기" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="j5Y-gx-YbB">
+                                        <rect key="frame" x="10" y="93.666666666666686" width="281" height="34"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                    <stackView opaque="NO" contentMode="scaleToFill" spacing="18" translatesAutoresizingMaskIntoConstraints="NO" id="Nw2-Fj-SJL">
+                                        <rect key="frame" x="0.0" y="170.66666666666669" width="301" height="34.333333333333343"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WSd-I6-4OE">
+                                                <rect key="frame" x="0.0" y="0.0" width="141.66666666666666" height="34.333333333333336"/>
+                                                <color key="tintColor" systemColor="systemRedColor"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="닫기"/>
+                                                <connections>
+                                                    <action selector="closePopUpBtnClicked:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="48U-dO-Jd6"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6Nx-fF-I8Z">
+                                                <rect key="frame" x="159.66666666666663" y="0.0" width="141.33333333333337" height="34.333333333333336"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="확인"/>
+                                                <connections>
+                                                    <action selector="checkPopUpBtnClicked:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="jxR-ae-NII"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="할일은 최소 6글자 이상으로 적어주세요!" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="o4a-Nb-ZLZ">
+                                        <rect key="frame" x="10" y="137.66666666666669" width="222" height="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <color key="textColor" systemColor="systemRedColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemGray5Color"/>
+                                <constraints>
+                                    <constraint firstItem="U5P-vo-ss3" firstAttribute="centerX" secondItem="Opu-fx-Z3g" secondAttribute="centerX" id="0uG-ye-80i"/>
+                                    <constraint firstItem="WtQ-MJ-Mmx" firstAttribute="centerX" secondItem="Opu-fx-Z3g" secondAttribute="centerX" id="FC8-SL-rS4"/>
+                                    <constraint firstItem="WtQ-MJ-Mmx" firstAttribute="top" secondItem="Pih-2e-gfN" secondAttribute="bottom" constant="10" id="L1I-mj-exU"/>
+                                    <constraint firstItem="Nw2-Fj-SJL" firstAttribute="leading" secondItem="Opu-fx-Z3g" secondAttribute="leading" id="Mym-RN-OGD"/>
+                                    <constraint firstItem="j5Y-gx-YbB" firstAttribute="centerX" secondItem="Opu-fx-Z3g" secondAttribute="centerX" id="SKg-x3-zee"/>
+                                    <constraint firstAttribute="bottom" secondItem="Nw2-Fj-SJL" secondAttribute="bottom" id="TXq-P2-SzW"/>
+                                    <constraint firstAttribute="trailing" secondItem="Nw2-Fj-SJL" secondAttribute="trailing" id="WYY-hJ-gDv"/>
+                                    <constraint firstItem="o4a-Nb-ZLZ" firstAttribute="top" secondItem="j5Y-gx-YbB" secondAttribute="bottom" constant="10" id="b2B-SV-zvQ"/>
+                                    <constraint firstItem="U5P-vo-ss3" firstAttribute="top" secondItem="WtQ-MJ-Mmx" secondAttribute="bottom" constant="5" id="dXb-6E-qpN"/>
+                                    <constraint firstItem="j5Y-gx-YbB" firstAttribute="leading" secondItem="Opu-fx-Z3g" secondAttribute="leading" constant="10" id="dw3-b6-KLe"/>
+                                    <constraint firstItem="Nw2-Fj-SJL" firstAttribute="centerX" secondItem="Opu-fx-Z3g" secondAttribute="centerX" id="ebv-Ow-7BC"/>
+                                    <constraint firstItem="o4a-Nb-ZLZ" firstAttribute="leading" secondItem="j5Y-gx-YbB" secondAttribute="leading" id="iGo-BX-TgE"/>
+                                    <constraint firstItem="j5Y-gx-YbB" firstAttribute="top" secondItem="WtQ-MJ-Mmx" secondAttribute="bottom" constant="30" id="nvZ-a9-7no"/>
+                                    <constraint firstItem="Pih-2e-gfN" firstAttribute="top" secondItem="Opu-fx-Z3g" secondAttribute="top" constant="20" id="s8K-rz-Ede"/>
+                                    <constraint firstItem="Pih-2e-gfN" firstAttribute="centerX" secondItem="Opu-fx-Z3g" secondAttribute="centerX" id="tYK-a1-seK"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                    <connections>
+                        <outlet property="editView" destination="Opu-fx-Z3g" id="s3a-pJ-UYh"/>
+                        <outlet property="errMessage" destination="o4a-Nb-ZLZ" id="0Ln-LE-4AH"/>
+                        <outlet property="todoContent" destination="j5Y-gx-YbB" id="lAr-y8-qtp"/>
+                        <outlet property="todoId" destination="WtQ-MJ-Mmx" id="ehg-uG-pYI"/>
+                        <outlet property="todoOriginalLabel" destination="U5P-vo-ss3" id="NV7-Ej-BRu"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="34" y="4"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGray5Color">
+            <color red="0.89803921568627454" green="0.89803921568627454" blue="0.91764705882352937" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemRedColor">
+            <color red="1" green="0.23137254901960785" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>
