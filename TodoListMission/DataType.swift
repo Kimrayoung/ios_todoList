@@ -18,7 +18,7 @@ struct TotalAllResponse: Codable {
 // MARK: - 할일 목록 전체 data
 struct TodoAllData: Codable {
     let id: Int?
-    let title, content: String?
+    var title, content: String?
     let images: [Image]?
     let isPublished: Bool?
     let createdAt, updatedAt: String?

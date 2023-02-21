@@ -18,7 +18,9 @@ class EditTodoModel: UIViewController {
     
     @IBOutlet weak var errMessage: UILabel!
     
-    var editBtnCompleteClousre : ((AddATodoData) -> ())? = nil
+//    var editBtnCompleteClousre : ((AddATodoData) -> ())? = nil
+    var editBtnCompleteClousre : ((_ indexPathRow: Int, _ todoId: Int, _ todoTitle: String) -> ())? = nil
+    var indexPathRow: Int? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,6 +50,7 @@ class EditTodoModel: UIViewController {
                     case .success(let data):
                         print(#fileID, #function, #line, "- data: \(data)")
                         
+                        
                         if let editBtnCompleteClousre = self.editBtnCompleteClousre {
                             if  data.data == nil {
                                 print(#fileID, #function, #line, "- nil?")
@@ -55,7 +58,7 @@ class EditTodoModel: UIViewController {
                                 self.errMessage.isHidden = false
                             } else {
                                 self.dismiss(animated: true)
-                                editBtnCompleteClousre(data.data!)
+                                editBtnCompleteClousre(self.indexPathRow!, (data.data?.id!)!, (data.data?.title!)!)
                             }
                         }
                         

@@ -154,83 +154,111 @@ extension MainViewController : UITableViewDataSource {
     //어떤 셀을 만들어줄건지
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let data = todoListData[indexPath.row]
-        
+        print(#fileID, #function, #line, "- \(indexPath.section)")
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TodoCell.reuseIdentifier, for: indexPath) as? TodoCell else { return UITableViewCell() }
-        //String(describing)을 이용해서 data.id를 String으로 변경해준다
-        if let dataID: Int = data.id {
-            cell.todoID.text = "todoID: \(String(describing: dataID))"
-    //        할일 내용 넣어주기
-            cell.todoContent.text = data.title
-        }
         
-        //todoCell에 있는 수정버튼 클릭했을 때 실행해줄 부분 정의해주기
-        cell.editBtnClousre = {
-            //수정popup스토리보드 가져오기
-            let editTodoStoryboard = UIStoryboard.init(name: "EditTodoModel", bundle: nil)
-            //수정팝업 뷰컨가져오기
-            guard let editTodoModelVC = editTodoStoryboard.instantiateViewController(withIdentifier: EditTodoModel.withIdentifier) as? EditTodoModel else { return }
-            //모달 띄우는 스타일 정하기
-            editTodoModelVC.modalPresentationStyle = .overCurrentContext
-            editTodoModelVC.modalTransitionStyle = .crossDissolve
-            
-            //수정하기 모달 보여주기
-            self.present(editTodoModelVC, animated: true)
-            
-            //수정 팝업에서 데이터 넣어주기
-            if let todoId = data.id, let todoTitle = data.title {
-                //어떤 할일 이었는지 입력
-                editTodoModelVC.todoId.text = "\(String(describing: todoId))" //기존 할일의 ID
-                editTodoModelVC.todoOriginalLabel.text = "기존 내용: \(todoTitle)" //기존 할일의 내용
-            }
-            
-            //수정 팝업이 닫히고 나서 cell 수정
-            editTodoModelVC.editBtnCompleteClousre = { data in
-                if let dataId = data.id {
-                    cell.todoID.text = "todoID: \(String(describing: dataId))"
-                    cell.todoContent.text = data.title
-                }
-            }
-        }
+        //데이터를 UI에 반영한다
+        //그리고 클로져의 장점 -> 함수를 변수로 사용 가능하다 그러므로 아래 extension을 통해서 정의해준 cellDeleteAction(todoId: Int) 함수를 변수의 형태로 전달해줄 수 있다
+        //이렇게 변수의 형태로 전달을 해주면 굳이 여기서 실행해줄 필요가 없음
+        cell.configureUI(data: data,
+                         indexPathRow: indexPath.row,
+                         deleteAction: cellDeleteAction,
+                         editAction: cellEditAction,
+                         selectedSwithAction: cellSelectedSwitch)
+//        if let dataID: Int = data.id {
+//            cell.todoID.text = "todoID: \(String(describing: dataID))"
+//            cell.todoID.tag = dataID
+//    //        할일 내용 넣어주기
+//            cell.todoContent.text = data.title
+//        }
+        
         
         //cell에 삭제 버튼을 눌렀을 때
-        cell.deleteBtnClousre = {
-            AF.request(TodosRouter.deleteATodo(id: String(describing: data.id)))
-                .responseDecodable (of: AddATodoDataResponse.self){ (response: DataResponse<AddATodoDataResponse, AFError>) in
-                    debugPrint(response)
-                    
-                    switch response.result {
-                    case .failure(let err):
-                        print(#fileID, #function, #line, "- err: \(err)")
-                    case .success(let data):
-                        print(#fileID, #function, #line, "- data: \(data.data!)")
-                    }
-                }
-            self.todoListData.remove(at: indexPath.row)
-            self.todoListTableView.reloadData()
-            return
-        }
+//        cell.deleteBtnClousre = cellDeleteAction(_:)
         
-        cell.selectedSwitchClousre = { selectedBool in
-            print(#fileID, #function, #line, "- \(selectedBool)")
-            let data = self.todoListData[indexPath.row]
-            if selectedBool {
-                if let dataID = data.id {
-                    self.selectedTodoData.append(dataID)
-                    self.selectedTodo.text! = "\(self.selectedTodoData)"
-                }
-            } else {
-                if let dataID = data.id {
-                    self.selectedTodoData = self.selectedTodoData.filter({
-                        $0 != dataID
-                    })
-                    self.selectedTodo.text! = "\(self.selectedTodoData)"
-                }
-            }
-        }
+        //todoCell에 있는 수정버튼 클릭했을 때 실행해줄 부분 정의해주기
+//        cell.editBtnClousre = cellEditAction
+        
+        
+//        cell.selectedSwitchClousre = { selectedBool in
+//            print(#fileID, #function, #line, "- \(selectedBool)")
+//            let data = self.todoListData[indexPath.row]
+//            if selectedBool {
+//                if let dataID = data.id {
+//                    self.selectedTodoData.append(dataID)
+//                    self.selectedTodo.text! = "\(self.selectedTodoData)"
+//                }
+//            } else {
+//                if let dataID = data.id {
+//                    self.selectedTodoData = self.selectedTodoData.filter({
+//                        $0 != dataID
+//                    })
+//                    self.selectedTodo.text! = "\(self.selectedTodoData)"
+//                }
+//            }
+//        }
         
         return cell
     }
 }
 
+//MARK: - Cell Event
+extension MainViewController {
+    fileprivate func cellDeleteAction(_ dataId: Int, _ indexPathRow: Int) {
+        AF.request(TodosRouter.deleteATodo(id: String(describing: dataId)))
+            .responseDecodable (of: AddATodoDataResponse.self){ (response: DataResponse<AddATodoDataResponse, AFError>) in
+                debugPrint(response)
+                
+                switch response.result {
+                case .failure(let err):
+                    print(#fileID, #function, #line, "- err: \(err)")
+                case .success(let data):
+                    print(#fileID, #function, #line, "- data: \(data.data!)")
+                    self.todoListData.remove(at: indexPathRow)
+                    self.todoListTableView.reloadData()
+                }
+            }
+    }
+    
+    fileprivate func cellEditAction(_ dataId: Int, _ dataTitle: String, _ indexPathRow: Int) {
+        //수정popup스토리보드 가져오기
+        let editTodoStoryboard = UIStoryboard.init(name: "EditTodoModel", bundle: nil)
+        //수정팝업 뷰컨가져오기
+        guard let editTodoModelVC = editTodoStoryboard.instantiateViewController(withIdentifier: EditTodoModel.withIdentifier) as? EditTodoModel else { return }
+        //모달 띄우는 스타일 정하기
+        editTodoModelVC.modalPresentationStyle = .overCurrentContext
+        editTodoModelVC.modalTransitionStyle = .crossDissolve
+        
+        //수정하기 모달 보여주기
+        self.present(editTodoModelVC, animated: true)
+        
+        //수정 팝업에서 데이터 넣어주기
+        //어떤 할일 이었는지 입력
+        editTodoModelVC.todoId.text = "\(String(describing: dataId))" //기존 할일의 ID
+        editTodoModelVC.todoOriginalLabel.text = "기존 내용: \(dataTitle)" //기존 할일의 내용
+        editTodoModelVC.indexPathRow = indexPathRow
+        
+        //수정 팝업이 닫히고 나서 cell 수정
+        editTodoModelVC.editBtnCompleteClousre = { indexPathRow, dataId, dataTitle in
+            self.todoListData[indexPathRow].title = dataTitle
+            
+            self.todoListTableView.reloadRows(at: [IndexPath(row: indexPathRow, section: 0)], with: .fade)
+            
+        }
 
-
+    }
+    
+    fileprivate func cellSelectedSwitch(_ dataID: Int, _ indexPathRow: Int, _ selectedBool: Bool) {
+        print(#fileID, #function, #line, "- \(selectedBool)")
+        let data = self.todoListData[indexPathRow]
+        if selectedBool {
+            self.selectedTodoData.append(dataID)
+            self.selectedTodo.text! = "\(self.selectedTodoData)"
+        } else {
+            self.selectedTodoData = self.selectedTodoData.filter({
+                $0 != dataID
+            })
+            self.selectedTodo.text! = "\(self.selectedTodoData)"
+        }
+    }
+}
