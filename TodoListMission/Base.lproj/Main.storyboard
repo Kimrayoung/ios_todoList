@@ -107,6 +107,7 @@
                     </view>
                     <connections>
                         <outlet property="nowPageCnt" destination="iLw-9H-YeI" id="VHs-fs-RiK"/>
+                        <outlet property="selectedDeleteBtn" destination="Kga-DS-Aza" id="B7y-mi-mjN"/>
                         <outlet property="selectedTodo" destination="fZ6-Eq-bK2" id="aeT-nr-2fb"/>
                         <outlet property="todoListTableView" destination="Wj7-UL-p9c" id="oGs-kr-8gS"/>
                     </connections>

@@ -7,8 +7,10 @@
 
 import UIKit
 import Alamofire
+import RxSwift
+import RxCocoa
 
-class MainViewController: UIViewController {
+class MainViewController: UIViewController, UITableViewDelegate {
     //tableView IBOutlet만들어주기
     @IBOutlet weak var todoListTableView: UITableView!
     @IBOutlet weak var selectedTodoLabel: UILabel!
@@ -22,6 +24,10 @@ class MainViewController: UIViewController {
     //tableview에 들어갈 데이터목록
     var todoListData: [TodoAllData] = []
     
+    var disposeBag = DisposeBag()
+    
+    @IBOutlet weak var selectedDeleteBtn: UIButton!
+     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -30,15 +36,22 @@ class MainViewController: UIViewController {
         
         //dataSource넣어주기
         self.todoListTableView.dataSource = self
-//        self.todoListTableView.delegate = self
+        self.todoListTableView.delegate = self
         
         //todoList목록 불러오기
         requestTodoData()
+        
+        //선택된 할일 삭제 버튼 클릭시
+        selectedDeleteBtn.rx.tap.bind {
+            self.deleteSelectedTodos(selectedTodoIds: self.selectedTodoData) { deleteArray in
+                self.todoListData =  self.todoListData.filter{ aTodo in
+                    deleteArray.contains(where: {aTodo.id ?? 0 != $0})
+                }
+            }
+        }
+        .disposed(by: disposeBag)
     }
     
-//    override func viewDidLayoutSubviews() {
-//        super.viewDidLayoutSubviews()
-//    }
     
     //TodoList 데이터를 받아오는 부분
     func requestTodoData() {
@@ -220,6 +233,23 @@ extension MainViewController {
             }
     }
     
+    //Rxswift를 이용한 선택된 할일 삭제
+    fileprivate func deletATodo(_ dataId: Int, completion: @escaping (Int?) -> Void) {
+        AF.request(TodosRouter.deleteATodo(id: String(describing: dataId)))
+            .responseDecodable (of: AddATodoDataResponse.self){ (response: DataResponse<AddATodoDataResponse, AFError>) in
+                debugPrint(response)
+                
+                switch response.result {
+                case .failure(let err):
+                    print(#fileID, #function, #line, "- err: \(err)")
+                    completion(nil)
+                case .success(let data):
+                    print(#fileID, #function, #line, "- data: \(data.data!)")
+                    completion(data.data?.id)
+                }
+            }
+    }
+    
     fileprivate func cellEditAction(_ dataId: Int, _ dataTitle: String, _ indexPathRow: Int) {
         //수정popup스토리보드 가져오기
         let editTodoStoryboard = UIStoryboard.init(name: "EditTodoModel", bundle: nil)
@@ -259,6 +289,40 @@ extension MainViewController {
                 $0 != dataID
             })
             self.selectedTodo.text! = "\(self.selectedTodoData)"
+        }
+    }
+}
+
+//MARK: - API처리
+extension MainViewController {
+    func deleteSelectedTodos(selectedTodoIds: [Int],
+                                    completion: @escaping ([Int]) -> Void){
+        
+        let group = DispatchGroup()
+        
+        // 성공적으로 삭제가 이뤄진 녀석들
+        var deletedTodoIds : [Int] = [Int]()
+        
+        selectedTodoIds.forEach { aTodoId in
+            
+            // 디스패치 그룹에 넣음
+            group.enter()
+            
+            //deleteATodo함수 실행 -> completion을 통해서 삭제가 된 애들을 deleteTodoIds 배열에 담는다
+            self.deletATodo(aTodoId, completion: { deletedId in
+                // 삭제된 아이디를 삭제된 아이디 배열에 넣는다
+                if let id = deletedId {
+                    deletedTodoIds.append(id)
+                }
+                group.leave() //삭제가 완료되었으므로 디스패치 그룹에서 삭제
+            })
+        }
+        
+        // Configure a completion callback
+        group.notify(queue: .main) {
+            // All requests completed
+            print("모든 api 완료 됨")
+            completion(deletedTodoIds) //삭제된 아이들의 다음 작업 실행
         }
     }
 }
