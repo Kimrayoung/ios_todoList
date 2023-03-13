@@ -8,11 +8,16 @@
 import Foundation
 import UIKit
 import Alamofire
+import RxAlamofire
+import RxCocoa
+import RxSwift
 
 class AddTodoModal: UIViewController {
     @IBOutlet weak var addTodoPopUp: UIView!
     @IBOutlet weak var todoTextField: UITextField!
     @IBOutlet weak var todoCntErrorLabel: UILabel!
+
+    var disposeBag = DisposeBag()
     
     //다른 곳에서 클로저를 정의할꺼니까 여기서는 클로저를 실행만 할 수 있도록 로직 빼기
     var addBtnCompletionClousre : ((AddATodoData?,_ message: String?) -> ())? = nil
@@ -38,28 +43,27 @@ class AddTodoModal: UIViewController {
         
         let parameters = Todo(title: todoTitle, is_done: false)
         print(#fileID, #function, #line, "- parameters checking: \(parameters)")
-        
-        AF.request(TodosRouter.addATodoJson(param: parameters))
-            .responseDecodable(of: AddATodoDataResponse.self) { (response: DataResponse<AddATodoDataResponse, AFError>) in
-                debugPrint(response)
-                
-                switch response.result {
-                case .failure(let err):
-                    print(#fileID, #function, #line, "- err message: \(err)")
-                case .success(let data):
-                    print(#fileID, #function, #line, "- data: \(data)")
+        RxAlamofire.request(TodosRouter.addATodoJson(param: parameters))
+            .data()
+            .decode(type: AddATodoDataResponse.self, decoder: JSONDecoder())
+            .subscribe (
+                onNext: { value in
+                    print(#fileID, #function, #line, "- value: \(value)")
                     if let addBtnCompletionClousre = self.addBtnCompletionClousre  {
-                        if data.data == nil {
-                            self.todoCntErrorLabel.text = data.message
-                            self.todoCntErrorLabel.isHidden = false
-                        } else {
-                            addBtnCompletionClousre(data.data, data.message)
-                            self.dismiss(animated: true)
+                            if value.data == nil {
+                                self.todoCntErrorLabel.text = value.message
+                                self.todoCntErrorLabel.isHidden = false
+                            } else {
+                                addBtnCompletionClousre(value.data, value.message)
+                                self.dismiss(animated: true)
+                            }
                         }
-                    }
-
+                },
+                onError: { Error in
+                    print(#fileID, #function, #line, "- err  message:\(Error)")
                 }
-            }
+            )
+            .disposed(by: disposeBag)
     }
     
 }

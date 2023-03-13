@@ -43,9 +43,6 @@
                                                 <rect key="frame" x="174.66666666666663" y="0.0" width="164.33333333333337" height="34.333333333333336"/>
                                                 <state key="normal" title="Button"/>
                                                 <buttonConfiguration key="configuration" style="filled" title="할 일 추가"/>
-                                                <connections>
-                                                    <action selector="addTodoBtnClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="MnB-NC-Zzd"/>
-                                                </connections>
                                             </button>
                                         </subviews>
                                     </stackView>
@@ -106,6 +103,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="addTodoBtn" destination="4T0-Hu-PJg" id="NPy-LU-h7T"/>
                         <outlet property="nowPageCnt" destination="iLw-9H-YeI" id="VHs-fs-RiK"/>
                         <outlet property="selectedDeleteBtn" destination="Kga-DS-Aza" id="B7y-mi-mjN"/>
                         <outlet property="selectedTodo" destination="fZ6-Eq-bK2" id="aeT-nr-2fb"/>

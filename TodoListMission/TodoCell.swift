@@ -8,6 +8,8 @@
 import Foundation
 import UIKit
 import Alamofire
+import RxSwift
+import RxCocoa
 
 class TodoCell: UITableViewCell {
     @IBOutlet weak var todoID: UILabel!
@@ -18,6 +20,8 @@ class TodoCell: UITableViewCell {
     
     @IBOutlet weak var selectedSwitch: UISwitch!
     
+    var disposeBag = DisposeBag()
+    
     var editBtnClousre : ((_ id: Int, _ title: String, _ indexPathRow: Int) -> ())? = nil
     var deleteBtnClousre: ((_ id: Int, _ indexPathRow: Int) -> ())? = nil
     var indexPathRow: Int? = nil
@@ -25,8 +29,18 @@ class TodoCell: UITableViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        editBtn.addTarget(self, action: #selector(editBtnClicked(_ :)), for: .touchUpInside)
-        deleteBtn.addTarget(self, action: #selector(deleteBtnClicked(_ :)), for: .touchUpInside)
+        //수정하기 버튼
+        editBtn.rx.tap.bind { [weak self] in
+            self?.editBtnClicked(self?.editBtn)
+        }
+        .disposed(by: disposeBag)
+        
+        //삭제하기 버튼
+        deleteBtn.rx.tap.bind { [weak self] in
+            self?.deleteBtnClicked(self?.deleteBtn)
+        }
+        .disposed(by: disposeBag)
+
         selectedSwitch.addTarget(self, action: #selector(selectedSwitchClicked(_ :)), for: .touchUpInside)
     }
     

@@ -9,6 +9,7 @@ import UIKit
 import Alamofire
 import RxSwift
 import RxCocoa
+import RxAlamofire
 
 class MainViewController: UIViewController, UITableViewDelegate {
     //tableView IBOutlet만들어주기
@@ -27,6 +28,8 @@ class MainViewController: UIViewController, UITableViewDelegate {
     var disposeBag = DisposeBag()
     
     @IBOutlet weak var selectedDeleteBtn: UIButton!
+    @IBOutlet weak var addTodoBtn: UIButton!
+    
      
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,35 +53,37 @@ class MainViewController: UIViewController, UITableViewDelegate {
             }
         }
         .disposed(by: disposeBag)
+        
+        //할일 추가 버튼 클릭시
+        addTodoBtn.rx.tap.bind { [weak self] in
+            self?.addTodo()
+        }
+        .disposed(by: disposeBag)
     }
     
     
     //TodoList 데이터를 받아오는 부분
     func requestTodoData() {
         print(#fileID, #function, #line, "- requestTodoData")
-        AF.request(TodosRouter.fetchAll())
-        //response데이터 바로 디코딩하기
-        .responseDecodable (of: TotalAllResponse.self, completionHandler: { (response: DataResponse<TotalAllResponse, AFError>) in
-            switch response.result {
-            case .failure(let err):
-                print(#fileID, #function, #line, "- err message: \(err)")
-            case .success(let data):
-                print(#fileID, #function, #line, "- data: \(data)")
-                guard let todoData = data.data else { return }
-                //데이터 몇개인지 파악하기
-                let dataCnt: Int = todoData.count
-                
-                //데이터 개수만큼 돌려서 todoData만들어주기
-                for i in 0..<dataCnt {
-                    let todo = TodoAllData(id: todoData[i].id, title: todoData[i].title, content: todoData[i].content, images: todoData[i].images, isPublished: todoData[i].isPublished, createdAt: todoData[i].createdAt, updatedAt: todoData[i].updatedAt)
-                    //만들어준 todoData를 tableView에 뿌려줄 데이터 list에 넣어주기
-                    self.todoListData.append(todo)
-                    self.todoListTableView.reloadData()
+        RxAlamofire.request(TodosRouter.fetchAll())
+            .data() //observable()를 만들어서 나옴
+            .decode(type: TotalAllResponse.self, decoder: JSONDecoder())
+            .subscribe(
+                onNext: { value in
+                    guard let todoData = value.data else { return }
+                    //데이터 몇개인지 파악하기
+                    let dataCnt: Int = todoData.count
+
+                    //데이터 개수만큼 돌려서 todoData만들어주기
+                    for i in 0..<dataCnt {
+                        let todo = TodoAllData(id: todoData[i].id, title: todoData[i].title, content: todoData[i].content, images: todoData[i].images, isPublished: todoData[i].isPublished, createdAt: todoData[i].createdAt, updatedAt: todoData[i].updatedAt)
+                        //만들어준 todoData를 tableView에 뿌려줄 데이터 list에 넣어주기
+                        self.todoListData.append(todo)
+                        self.todoListTableView.reloadData()
+                    }
                 }
-                
-                print(#fileID, #function, #line, "- todoListData: \(self.todoListData)")
-            }
-        })
+            )
+            .disposed(by: disposeBag)
     }
     
     //푸터에 스피너 만들기 -> 로딩창
@@ -130,31 +135,6 @@ class MainViewController: UIViewController, UITableViewDelegate {
         }
     }
     
-    //할일 추가 버튼 클릭
-    @IBAction func addTodoBtnClicked(_ sender: UIButton) {
-        print(#fileID, #function, #line, "- <#comment#>")
-        //스토리보드 가져오기
-        let addTodoStoryboard = UIStoryboard.init(name: "AddTodoModal", bundle: nil)
-        //viewController가져오기
-        guard let addTodoModalVC = addTodoStoryboard.instantiateViewController(withIdentifier: AddTodoModal.withIdentifier) as? AddTodoModal else { return }
-        
-        //모달 띄우는 스타일 정하기
-        addTodoModalVC.modalPresentationStyle = .overCurrentContext
-        addTodoModalVC.modalTransitionStyle = .crossDissolve
-        
-        //모달 띄우기
-        self.present(addTodoModalVC, animated: true)
-        //클로저 정의 -> 클로저로 값을 받아서 그 값을 데이터에 넣어주기
-        addTodoModalVC.addBtnCompletionClousre = { data, message in
-            print(#fileID, #function, #line, "")
-            guard let todoData = data else { return }
-            let addTodoData = TodoAllData(id: todoData.id, title: todoData.title, content: todoData.title, images: nil, isPublished: todoData.isDone, createdAt: todoData.createdAt, updatedAt: todoData.updatedAt)
-            
-            self.todoListData.append(addTodoData)
-            self.todoListTableView.reloadData()
-        }
-    }
-    
 }
 
 extension MainViewController : UITableViewDataSource {
@@ -178,38 +158,6 @@ extension MainViewController : UITableViewDataSource {
                          deleteAction: cellDeleteAction,
                          editAction: cellEditAction,
                          selectedSwithAction: cellSelectedSwitch)
-//        if let dataID: Int = data.id {
-//            cell.todoID.text = "todoID: \(String(describing: dataID))"
-//            cell.todoID.tag = dataID
-//    //        할일 내용 넣어주기
-//            cell.todoContent.text = data.title
-//        }
-        
-        
-        //cell에 삭제 버튼을 눌렀을 때
-//        cell.deleteBtnClousre = cellDeleteAction(_:)
-        
-        //todoCell에 있는 수정버튼 클릭했을 때 실행해줄 부분 정의해주기
-//        cell.editBtnClousre = cellEditAction
-        
-        
-//        cell.selectedSwitchClousre = { selectedBool in
-//            print(#fileID, #function, #line, "- \(selectedBool)")
-//            let data = self.todoListData[indexPath.row]
-//            if selectedBool {
-//                if let dataID = data.id {
-//                    self.selectedTodoData.append(dataID)
-//                    self.selectedTodo.text! = "\(self.selectedTodoData)"
-//                }
-//            } else {
-//                if let dataID = data.id {
-//                    self.selectedTodoData = self.selectedTodoData.filter({
-//                        $0 != dataID
-//                    })
-//                    self.selectedTodo.text! = "\(self.selectedTodoData)"
-//                }
-//            }
-//        }
         
         return cell
     }
@@ -218,36 +166,39 @@ extension MainViewController : UITableViewDataSource {
 //MARK: - Cell Event
 extension MainViewController {
     fileprivate func cellDeleteAction(_ dataId: Int, _ indexPathRow: Int) {
-        AF.request(TodosRouter.deleteATodo(id: String(describing: dataId)))
-            .responseDecodable (of: AddATodoDataResponse.self){ (response: DataResponse<AddATodoDataResponse, AFError>) in
-                debugPrint(response)
-                
-                switch response.result {
-                case .failure(let err):
-                    print(#fileID, #function, #line, "- err: \(err)")
-                case .success(let data):
-                    print(#fileID, #function, #line, "- data: \(data.data!)")
+        RxAlamofire.request(TodosRouter.deleteATodo(id: String(describing: dataId)))
+            .data()
+            .decode(type: AddATodoDataResponse.self, decoder: JSONDecoder())
+            .subscribe (
+                onNext: { value in
+                    print(#fileID, #function, #line, "- cellDeleeteAction value: \(value)")
                     self.todoListData.remove(at: indexPathRow)
                     self.todoListTableView.reloadData()
+                },
+                onError: { Error in
+                    print(#fileID, #function, #line, "- err message: \(Error)")
                 }
-            }
+                
+            )
+            .disposed(by: disposeBag)
     }
     
     //Rxswift를 이용한 선택된 할일 삭제
-    fileprivate func deletATodo(_ dataId: Int, completion: @escaping (Int?) -> Void) {
-        AF.request(TodosRouter.deleteATodo(id: String(describing: dataId)))
-            .responseDecodable (of: AddATodoDataResponse.self){ (response: DataResponse<AddATodoDataResponse, AFError>) in
-                debugPrint(response)
-                
-                switch response.result {
-                case .failure(let err):
-                    print(#fileID, #function, #line, "- err: \(err)")
-                    completion(nil)
-                case .success(let data):
-                    print(#fileID, #function, #line, "- data: \(data.data!)")
-                    completion(data.data?.id)
+    fileprivate func deleteATodo(_ dataId: Int, completion: @escaping (Int?) -> Void) {
+        RxAlamofire.request(TodosRouter.deleteATodo(id: String(describing: dataId)))
+            .data()
+            .decode(type: AddATodoDataResponse.self, decoder: JSONDecoder())
+            .subscribe (
+                onNext: { value in
+                    print(#fileID, #function, #line, "- value: \(value)")
+                    completion(value.data?.id)
+                },
+                onError: { Error in
+                    print(#fileID, #function, #line, "- err message: \(Error)")
                 }
-            }
+                
+            )
+            .disposed(by: disposeBag)
     }
     
     fileprivate func cellEditAction(_ dataId: Int, _ dataTitle: String, _ indexPathRow: Int) {
@@ -309,7 +260,7 @@ extension MainViewController {
             group.enter()
             
             //deleteATodo함수 실행 -> completion을 통해서 삭제가 된 애들을 deleteTodoIds 배열에 담는다
-            self.deletATodo(aTodoId, completion: { deletedId in
+            self.deleteATodo(aTodoId, completion: { deletedId in
                 // 삭제된 아이디를 삭제된 아이디 배열에 넣는다
                 if let id = deletedId {
                     deletedTodoIds.append(id)
@@ -323,6 +274,31 @@ extension MainViewController {
             // All requests completed
             print("모든 api 완료 됨")
             completion(deletedTodoIds) //삭제된 아이들의 다음 작업 실행
+        }
+    }
+    
+    func addTodo() {
+        print(#fileID, #function, #line, "- <#comment#>")
+        //스토리보드 가져오기
+        let addTodoStoryboard = UIStoryboard.init(name: "AddTodoModal", bundle: nil)
+        //viewController가져오기
+        guard let addTodoModalVC = addTodoStoryboard.instantiateViewController(withIdentifier: AddTodoModal.withIdentifier) as? AddTodoModal else { return }
+        
+        //모달 띄우는 스타일 정하기
+        addTodoModalVC.modalPresentationStyle = .overCurrentContext
+        addTodoModalVC.modalTransitionStyle = .crossDissolve
+        
+        //모달 띄우기
+        self.present(addTodoModalVC, animated: true)
+        //클로저 정의 -> 클로저로 값을 받아서 그 값을 데이터에 넣어주기
+        addTodoModalVC.addBtnCompletionClousre = { data, message in
+            print(#fileID, #function, #line, "")
+            guard let todoData = data else { return }
+            let addTodoData = TodoAllData(id: todoData.id, title: todoData.title, content: todoData.title, images: nil, isPublished: todoData.isDone, createdAt: todoData.createdAt, updatedAt: todoData.updatedAt)
+            
+            self.todoListData.insert(addTodoData, at: 0)
+            print(#fileID, #function, #line, "- todoListData: \(self.todoListData)")
+            self.todoListTableView.reloadData()
         }
     }
 }

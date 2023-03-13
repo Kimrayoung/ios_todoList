@@ -20,17 +20,6 @@ enum TodosRouter: URLRequestConvertible {
     case editATodoJson(param: Todo, id: String) //todoData 수정하기
     case deleteATodo(id: String) //기존할일 삭제하기
     
-    /*
-     ?page = 1, order_by=desc 등은 query params에 해당한다
-     https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/posts?page=1&order_by=desc&per_page=10&status=all
-     */
-    
-//    var baseURL: URL {
-//        let BASE_URL = BASE_URL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-//        return URL(string: BASE_URL)!
-//    }
-
-    
     var endPoint: String {
         switch self  {
         case .fetchAll(let page):

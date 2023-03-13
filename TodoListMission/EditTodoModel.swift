@@ -8,6 +8,9 @@
 import Foundation
 import UIKit
 import Alamofire
+import RxSwift
+import RxCocoa
+import RxAlamofire
 
 class EditTodoModel: UIViewController {
     @IBOutlet weak var editView: UIView!
@@ -17,6 +20,7 @@ class EditTodoModel: UIViewController {
     @IBOutlet weak var todoContent: UITextField!
     
     @IBOutlet weak var errMessage: UILabel!
+    var disposeBag = DisposeBag()
     
 //    var editBtnCompleteClousre : ((AddATodoData) -> ())? = nil
     var editBtnCompleteClousre : ((_ indexPathRow: Int, _ todoId: Int, _ todoTitle: String) -> ())? = nil
@@ -39,31 +43,30 @@ class EditTodoModel: UIViewController {
     @IBAction func checkPopUpBtnClicked(_ sender: UIButton) {
         let data : Todo = Todo(title: todoContent.text, is_done: false)
         
+//        todoId.rx.text -> 뭔가 여기를 text가 있다면 이니까 rx로 바꿀 수 있지 않을까?
         if let todoId = todoId.text {
-            AF.request(TodosRouter.editATodoJson(param: data, id: todoId))
-                .responseDecodable(of: AddATodoDataResponse.self) { (response: DataResponse<AddATodoDataResponse, AFError>) in
-                    debugPrint(response)
-                
-                    switch response.result {
-                    case .failure(let err):
-                        print(#fileID, #function, #line, "- err: \(err)")
-                    case .success(let data):
-                        print(#fileID, #function, #line, "- data: \(data)")
-                        
-                        
+            RxAlamofire.request(TodosRouter.editATodoJson(param: data, id: todoId))
+                .data()
+                .decode(type: AddATodoDataResponse.self, decoder: JSONDecoder())
+                .subscribe (
+                    onNext: { value in
+                        print(#fileID, #function, #line, "- value: \(value)")
                         if let editBtnCompleteClousre = self.editBtnCompleteClousre {
-                            if  data.data == nil {
+                            if  value.data == nil {
                                 print(#fileID, #function, #line, "- nil?")
-                                self.errMessage.text = data.message
+                                self.errMessage.text = value.message
                                 self.errMessage.isHidden = false
                             } else {
                                 self.dismiss(animated: true)
-                                editBtnCompleteClousre(self.indexPathRow!, (data.data?.id!)!, (data.data?.title!)!)
+                                editBtnCompleteClousre(self.indexPathRow!, (value.data?.id!)!, (value.data?.title!)!)
                             }
                         }
-                        
+                    },
+                    onError: { error in
+                        print(#fileID, #function, #line, "- err message: \(error)")
                     }
-                }
+                )
+                .disposed(by: disposeBag)
         }
         
     }
