@@ -23,7 +23,8 @@ class MainViewController: UIViewController, UITableViewDelegate {
     var selectedTodoData: [Int] = []
     
     //tableview에 들어갈 데이터목록
-    var todoListData: [TodoAllData] = []
+//    var todoListData: [TodoAllData] = []
+    var todoListData: BehaviorRelay<[TodoAllData]> = BehaviorRelay(value: [])
 //    var todoListData: Observable<[TodoAllData]> = Observable.just([])
     
     var disposeBag = DisposeBag()
@@ -48,9 +49,21 @@ class MainViewController: UIViewController, UITableViewDelegate {
         //선택된 할일 삭제 버튼 클릭시
         selectedDeleteBtn.rx.tap.bind {
             self.deleteSelectedTodos(selectedTodoIds: self.selectedTodoData) { deleteArray in
-                self.todoListData =  self.todoListData.filter{ aTodo in
+                //rx로 변경했다면 반드시 value를 통해서 접근해야 한다 그냥 filter를 통해서 접근할 수 없음
+//                self.todoListData =  self.todoListData.filter{ aTodo in
+//                    deleteArray.contains(where: {aTodo.id ?? 0 != $0})
+//                }
+                
+                //아래 처럼 sekf.todoListData에 바로 데이터를 변경해서 넣어줄 수 없다 -> accept를 이용해서 넣어줘야 한다
+//                self.todoListData =  self.todoListData.value.filter{ aTodo in
+//                    deleteArray.contains(where: {aTodo.id ?? 0 != $0})
+//                }
+                
+                let filteredTodoListData = self.todoListData.value.filter{ aTodo in
                     deleteArray.contains(where: {aTodo.id ?? 0 != $0})
                 }
+                
+                self.todoListData.accept(filteredTodoListData)
             }
         }
         .disposed(by: disposeBag)
@@ -60,6 +73,14 @@ class MainViewController: UIViewController, UITableViewDelegate {
             self?.addTodo()
         }
         .disposed(by: disposeBag)
+        
+        //BehaviorRelay는 반드시 초기값을 넣어줘야 해서 빈배열을 초기값으로 넣어줬으므로 구독을 하게 되면 반드시 초기값이 들어오게 된다
+        todoListData
+            .debug("⭐️ todoListObservable")
+            .subscribe { value in
+            print(#fileID, #function, #line, "- value: \(value)")
+        }
+            .disposed(by: disposeBag)
         
     }
     
@@ -72,17 +93,25 @@ class MainViewController: UIViewController, UITableViewDelegate {
             .decode(type: TotalAllResponse.self, decoder: JSONDecoder())
             .subscribe(
                 onNext: { value in
-                    guard let todoData = value.data else { return }
-                    //데이터 몇개인지 파악하기
-                    let dataCnt: Int = todoData.count
-
-                    //데이터 개수만큼 돌려서 todoData만들어주기
-                    for i in 0..<dataCnt {
-                        let todo = TodoAllData(id: todoData[i].id, title: todoData[i].title, content: todoData[i].content, images: todoData[i].images, isPublished: todoData[i].isPublished, createdAt: todoData[i].createdAt, updatedAt: todoData[i].updatedAt)
-                        //만들어준 todoData를 tableView에 뿌려줄 데이터 list에 넣어주기
-                        self.todoListData.append(todo)
-                        self.todoListTableView.reloadData()
-                    }
+                    //todoData는 이미 TodoAllData자료형이기 때문에 todoListData자료형과 동일하다 + 이미 데이터가 파싱이 된 형태이기 때문에 아래 따로 fetchedTodoList를 통해서 데이터를 만들어줄 필요없이 바로 todoListData에 데이터를 보내줘도 된다 -> 즉, 자료형이 같고 이미 파싱이 되어있으므로 또 다른 파싱 필요없음
+                    guard let todoData : [TodoAllData] = value.data else { return }
+                    
+//                    //데이터 몇개인지 파악하기
+//                    let dataCnt: Int = todoData.count
+//
+//                    //todoListData에 매번 accept를 통해서 이벤트를 날리는 것보다는 임시데이터를 만들어서 거기에 데이터를 넣어주고 데이터가 반복문을 다 돌았을 때 이벤트를 날려주는 것이 더 좋다
+//                    var fetchedTodoList : [TodoAllData] = []
+//
+//                    //데이터 개수만큼 돌려서 todoData만들어주기
+//                    for i in 0..<dataCnt {
+//                        let todo = TodoAllData(id: todoData[i].id, title: todoData[i].title, content: todoData[i].content, images: todoData[i].images, isPublished: todoData[i].isPublished, createdAt: todoData[i].createdAt, updatedAt: todoData[i].updatedAt)
+//                        //만들어준 todoData를 tableView에 뿌려줄 데이터 list에 넣어주기
+//                        fetchedTodoList.append(todo)
+//                    }
+//
+//                    self.todoListData.accept(fetchedTodoList)
+                    self.todoListData.accept(todoData)
+                    self.todoListTableView.reloadData()
                 }
             )
             .disposed(by: disposeBag)
@@ -127,7 +156,16 @@ class MainViewController: UIViewController, UITableViewDelegate {
                             case .success(let data):
                                 print(#fileID, #function, #line, "- data checking: \(data)")
                                 self.todoListTableView.tableFooterView = nil
-                                self.todoListData.append(contentsOf: data.data!)
+                                
+                                var currentTodoListData = self.todoListData.value
+                                
+                                if let addedTodoData = data.data {
+                                    //behaviorRelay.value는 getter만 가능 setter 불가능
+//                                    var addedTodoListData = self.todoListData.value.append(contentsOf: data.data ?? [])
+                                    var addedTodoListData = currentTodoListData + addedTodoData
+                                    self.todoListData.accept(addedTodoListData)
+                                }
+//                                self.todoListData.append(contentsOf: addedTodoListData)
                                 self.todoListTableView.reloadData()
                             }
                         }
@@ -142,13 +180,13 @@ class MainViewController: UIViewController, UITableViewDelegate {
 extension MainViewController : UITableViewDataSource {
     //몇개의 section인지
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print(#fileID, #function, #line, "- todoListData.count: \(self.todoListData.count)")
-        return todoListData.count
+        print(#fileID, #function, #line, "- todoListData.count: \(self.todoListData.value.count)")
+        return todoListData.value.count
     }
     
     //어떤 셀을 만들어줄건지
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let data = todoListData[indexPath.row]
+        let data = todoListData.value[indexPath.row]
         print(#fileID, #function, #line, "- \(indexPath.section)")
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TodoCell.reuseIdentifier, for: indexPath) as? TodoCell else { return UITableViewCell() }
         
@@ -174,7 +212,12 @@ extension MainViewController {
             .subscribe (
                 onNext: { value in
                     print(#fileID, #function, #line, "- cellDeleeteAction value: \(value)")
-                    self.todoListData.remove(at: indexPathRow)
+                    var currentTodoList = self.todoListData.value
+                    
+                    currentTodoList.remove(at: indexPathRow)
+                    
+//                    self.todoListData.remove(at: indexPathRow)
+                    self.todoListData.accept(currentTodoList)
                     self.todoListTableView.reloadData()
                 },
                 onError: { Error in
@@ -223,7 +266,11 @@ extension MainViewController {
         
         //수정 팝업이 닫히고 나서 cell 수정
         editTodoModelVC.editBtnCompleteClousre = { indexPathRow, dataId, dataTitle in
-            self.todoListData[indexPathRow].title = dataTitle
+            var currentTodoList = self.todoListData.value
+            currentTodoList[indexPathRow].title = dataTitle
+            
+//            self.todoListData.[indexPathRow].title = dataTitle
+            self.todoListData.accept(currentTodoList)
             
             self.todoListTableView.reloadRows(at: [IndexPath(row: indexPathRow, section: 0)], with: .fade)
             
@@ -233,7 +280,7 @@ extension MainViewController {
     
     fileprivate func cellSelectedSwitch(_ dataID: Int, _ indexPathRow: Int, _ selectedBool: Bool) {
         print(#fileID, #function, #line, "- \(selectedBool)")
-        let data = self.todoListData[indexPathRow]
+        let data = self.todoListData.value[indexPathRow]
         if selectedBool {
             self.selectedTodoData.append(dataID)
             self.selectedTodo.text! = "\(self.selectedTodoData)"
@@ -298,7 +345,11 @@ extension MainViewController {
             guard let todoData = data else { return }
             let addTodoData = TodoAllData(id: todoData.id, title: todoData.title, content: todoData.title, images: nil, isPublished: todoData.isDone, createdAt: todoData.createdAt, updatedAt: todoData.updatedAt)
             
-            self.todoListData.insert(addTodoData, at: 0)
+            var currentTodoList = self.todoListData.value
+            currentTodoList.insert(addTodoData, at: 0)
+            
+//            self.todoListData.insert(addTodoData, at: 0)
+            self.todoListData.accept(currentTodoList)
             print(#fileID, #function, #line, "- todoListData: \(self.todoListData)")
             self.todoListTableView.reloadData()
         }
