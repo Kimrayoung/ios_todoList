@@ -24,6 +24,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
     
     //tableview에 들어갈 데이터목록
     var todoListData: [TodoAllData] = []
+//    var todoListData: Observable<[TodoAllData]> = Observable.just([])
     
     var disposeBag = DisposeBag()
     
@@ -59,6 +60,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
             self?.addTodo()
         }
         .disposed(by: disposeBag)
+        
     }
     
     
