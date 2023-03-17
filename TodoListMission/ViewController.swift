@@ -11,6 +11,24 @@ import RxSwift
 import RxCocoa
 import RxAlamofire
 
+//Reactive가 UIScrollView일때만 해당한다
+extension Reactive where Base: UIScrollView {
+    //바닥여부 체크하기
+    
+    //observable로 만들어서 scrollView의 y의 위치가 바닥에 닿는지 관찰할 수 있도록 만들어준다
+    //그리고 정확히 말하면 scrollView자체를 관찰하는 것이 아니라 scrollView의 contentOffset을 관찰해서 해당 위치를 보내주는 것이므로 map을 통해서 그거에 대한 처리를 한다
+    //그럼 이걸 구독하면 바닥에 닿았을 때 이벤트가 발생하고 그 이벤트를 받아서 원하는 로직을 처리할 수 있다
+    var didBottomReach: Observable<Bool> {
+        return contentOffset
+            .map{ $0.y }
+            .map{
+                //현재 y축의 위치가 특정 위치에 도달했을 때 api를 더 호출해준다
+                return $0 > (self.base.contentSize.height - 70 - self.base.frame.size.height)
+            }
+            .filter{ $0 == true }
+    }
+}
+
 class MainViewController: UIViewController, UITableViewDelegate {
     //tableView IBOutlet만들어주기
     @IBOutlet weak var todoListTableView: UITableView!
@@ -73,29 +91,28 @@ class MainViewController: UIViewController, UITableViewDelegate {
         }
             .disposed(by: disposeBag)
         
-        todoListTableView.rx.contentOffset
-            .debug("⭐️ contentOffSet")
-            .map{ $0.y } //contentOffset의 y만 가져온다는 것을 의미
+        todoListTableView
+            .rx
+            .didBottomReach
+            .filter{ _ in
+                self.nowFetching == false //nowFetching이 true일 때만 들어온다
+            }
+            .debug("⭐️ didBottomReach")
+//            .filter{ $0 == true } //didBottomReach의 결과값이 true일 경우에만 아래 로직이 실행
             .subscribe(
-                onNext: { [weak self] position in
+                onNext: { [weak self] didBottomReach in
                     guard let self = self else { return }
-//                    print(#fileID, #function, #line, "- contentOffset: \(contentOffset)")
-                    print(#fileID, #function, #line, "- position: \(position)")
                     
-//                    let position = contentOffset.y
+                    print(#fileID, #function, #line, "- didBottomReach: \(didBottomReach)")
                     
-                    //현재 y축의 위치가 특정 위치에 도달했을 때 api를 더 호출해준다
-                    if position > (self.todoListTableView.contentSize.height - 70 - self.todoListTableView.frame.size.height) {
-                        //테이블 뷰의 퓨터에 스피너 붙이기
-                        self.todoListTableView.tableFooterView = self.createSpinnerFooter()
-                        
-                        //현재 현재 api호출이 아닐때만 들어올 수 있다
-                        if !self.nowFetching {
-                            print(#fileID, #function, #line, "- nowFetching")
-                            self.nowFetching = true //여기에 들어오면 호출 중이라는 것이므로
-                            self.fetchMoreApiCall()
-                        }
-                    }
+//                    if !didBottomReach { return }
+                    
+                    self.todoListTableView.tableFooterView = self.createSpinnerFooter()
+                    
+                    print(#fileID, #function, #line, "- nowFetching")
+                    self.nowFetching = true //여기에 들어오면 호출 중이라는 것이므로
+                    self.fetchMoreApiCall()
+                    
                 }
             )
             .disposed(by: disposeBag)
@@ -132,25 +149,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
         return footerView
     }
     
-    //table view 안에는 스크롤 뷰가 포함이 되어있는데 이 스크롤뷰가 실제로 스크롤이 될때 타는 함수
-    //scrollViewDidScroll
-//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//        let position = scrollView.contentOffset.y
-//
-//        //현재 y축의 위치가 특정 위치에 도달했을 때 api를 더 호출해준다
-//        if position > (todoListTableView.contentSize.height - 70 - scrollView.frame.size.height) {
-//            //테이블 뷰의 퓨터에 스피너 붙이기
-//            self.todoListTableView.tableFooterView = createSpinnerFooter()
-//
-//            //현재 현재 api호출이 아닐때만 들어올 수 있다
-//            if !nowFetching {
-//                print(#fileID, #function, #line, "- nowFetching")
-//                nowFetching = true //여기에 들어오면 호출 중이라는 것이므로
-//                fetchMoreApiCall()
-//            }
-//        }
-//    }
-    
+    //contentOffSet의 y가 바닥에 도달하면 todoList를 더부른다(즉, api를 호출함)
     fileprivate func fetchMoreApiCall() {
         if let text = self.nowPageCnt.text, let value = Int(text) {
             print(#fileID, #function, #line, "- page chcecking: \(value + 1)")
