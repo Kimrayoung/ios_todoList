@@ -49,15 +49,6 @@ class MainViewController: UIViewController, UITableViewDelegate {
         //선택된 할일 삭제 버튼 클릭시
         selectedDeleteBtn.rx.tap.bind {
             self.deleteSelectedTodos(selectedTodoIds: self.selectedTodoData) { deleteArray in
-                //rx로 변경했다면 반드시 value를 통해서 접근해야 한다 그냥 filter를 통해서 접근할 수 없음
-//                self.todoListData =  self.todoListData.filter{ aTodo in
-//                    deleteArray.contains(where: {aTodo.id ?? 0 != $0})
-//                }
-                
-                //아래 처럼 sekf.todoListData에 바로 데이터를 변경해서 넣어줄 수 없다 -> accept를 이용해서 넣어줘야 한다
-//                self.todoListData =  self.todoListData.value.filter{ aTodo in
-//                    deleteArray.contains(where: {aTodo.id ?? 0 != $0})
-//                }
                 
                 let filteredTodoListData = self.todoListData.value.filter{ aTodo in
                     deleteArray.contains(where: {aTodo.id ?? 0 != $0})
@@ -82,6 +73,33 @@ class MainViewController: UIViewController, UITableViewDelegate {
         }
             .disposed(by: disposeBag)
         
+        todoListTableView.rx.contentOffset
+            .debug("⭐️ contentOffSet")
+            .map{ $0.y } //contentOffset의 y만 가져온다는 것을 의미
+            .subscribe(
+                onNext: { [weak self] position in
+                    guard let self = self else { return }
+//                    print(#fileID, #function, #line, "- contentOffset: \(contentOffset)")
+                    print(#fileID, #function, #line, "- position: \(position)")
+                    
+//                    let position = contentOffset.y
+                    
+                    //현재 y축의 위치가 특정 위치에 도달했을 때 api를 더 호출해준다
+                    if position > (self.todoListTableView.contentSize.height - 70 - self.todoListTableView.frame.size.height) {
+                        //테이블 뷰의 퓨터에 스피너 붙이기
+                        self.todoListTableView.tableFooterView = self.createSpinnerFooter()
+                        
+                        //현재 현재 api호출이 아닐때만 들어올 수 있다
+                        if !self.nowFetching {
+                            print(#fileID, #function, #line, "- nowFetching")
+                            self.nowFetching = true //여기에 들어오면 호출 중이라는 것이므로
+                            self.fetchMoreApiCall()
+                        }
+                    }
+                }
+            )
+            .disposed(by: disposeBag)
+        
     }
     
     
@@ -93,23 +111,8 @@ class MainViewController: UIViewController, UITableViewDelegate {
             .decode(type: TotalAllResponse.self, decoder: JSONDecoder())
             .subscribe(
                 onNext: { value in
-                    //todoData는 이미 TodoAllData자료형이기 때문에 todoListData자료형과 동일하다 + 이미 데이터가 파싱이 된 형태이기 때문에 아래 따로 fetchedTodoList를 통해서 데이터를 만들어줄 필요없이 바로 todoListData에 데이터를 보내줘도 된다 -> 즉, 자료형이 같고 이미 파싱이 되어있으므로 또 다른 파싱 필요없음
                     guard let todoData : [TodoAllData] = value.data else { return }
                     
-//                    //데이터 몇개인지 파악하기
-//                    let dataCnt: Int = todoData.count
-//
-//                    //todoListData에 매번 accept를 통해서 이벤트를 날리는 것보다는 임시데이터를 만들어서 거기에 데이터를 넣어주고 데이터가 반복문을 다 돌았을 때 이벤트를 날려주는 것이 더 좋다
-//                    var fetchedTodoList : [TodoAllData] = []
-//
-//                    //데이터 개수만큼 돌려서 todoData만들어주기
-//                    for i in 0..<dataCnt {
-//                        let todo = TodoAllData(id: todoData[i].id, title: todoData[i].title, content: todoData[i].content, images: todoData[i].images, isPublished: todoData[i].isPublished, createdAt: todoData[i].createdAt, updatedAt: todoData[i].updatedAt)
-//                        //만들어준 todoData를 tableView에 뿌려줄 데이터 list에 넣어주기
-//                        fetchedTodoList.append(todo)
-//                    }
-//
-//                    self.todoListData.accept(fetchedTodoList)
                     self.todoListData.accept(todoData)
                     self.todoListTableView.reloadData()
                 }
@@ -131,50 +134,52 @@ class MainViewController: UIViewController, UITableViewDelegate {
     
     //table view 안에는 스크롤 뷰가 포함이 되어있는데 이 스크롤뷰가 실제로 스크롤이 될때 타는 함수
     //scrollViewDidScroll
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let position = scrollView.contentOffset.y
-        
-        //현재 y축의 위치가 특정 위치에 도달했을 때 api를 더 호출해준다
-        if position > (todoListTableView.contentSize.height - 70 - scrollView.frame.size.height) {
-            //테이블 뷰의 퓨터에 스피너 붙이기
-            self.todoListTableView.tableFooterView = createSpinnerFooter()
-            
-            //현재 현재 api호출이 아닐때만 들어올 수 있다
-            if !nowFetching {
-                print(#fileID, #function, #line, "- nowFetching")
-                nowFetching = true //여기에 들어오면 호출 중이라는 것이므로
-                if let text = self.nowPageCnt.text, let value = Int(text) {
-                    print(#fileID, #function, #line, "- page chcecking: \(value + 1)")
-                    AF.request(TodosRouter.fetchAll(page: value + 1))
-                        .responseDecodable(of: TotalAllResponse.self) { (response: DataResponse<TotalAllResponse, AFError>) in
-                            debugPrint(response)
-                            self.nowPageCnt.text = String(describing: value + 1)
-                            self.nowFetching = false //decoding까지 끝났으므로 다시 api호출 중이 아니라는 것을 알려야 한다
-                            switch response.result {
-                            case .failure(let err):
-                                print(#fileID, #function, #line, "- err: \(err)")
-                            case .success(let data):
-                                print(#fileID, #function, #line, "- data checking: \(data)")
-                                self.todoListTableView.tableFooterView = nil
-                                
-                                var currentTodoListData = self.todoListData.value
-                                
-                                if let addedTodoData = data.data {
-                                    //behaviorRelay.value는 getter만 가능 setter 불가능
+//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+//        let position = scrollView.contentOffset.y
+//
+//        //현재 y축의 위치가 특정 위치에 도달했을 때 api를 더 호출해준다
+//        if position > (todoListTableView.contentSize.height - 70 - scrollView.frame.size.height) {
+//            //테이블 뷰의 퓨터에 스피너 붙이기
+//            self.todoListTableView.tableFooterView = createSpinnerFooter()
+//
+//            //현재 현재 api호출이 아닐때만 들어올 수 있다
+//            if !nowFetching {
+//                print(#fileID, #function, #line, "- nowFetching")
+//                nowFetching = true //여기에 들어오면 호출 중이라는 것이므로
+//                fetchMoreApiCall()
+//            }
+//        }
+//    }
+    
+    fileprivate func fetchMoreApiCall() {
+        if let text = self.nowPageCnt.text, let value = Int(text) {
+            print(#fileID, #function, #line, "- page chcecking: \(value + 1)")
+            AF.request(TodosRouter.fetchAll(page: value + 1))
+                .responseDecodable(of: TotalAllResponse.self) { (response: DataResponse<TotalAllResponse, AFError>) in
+                    debugPrint(response)
+                    self.nowPageCnt.text = String(describing: value + 1)
+                    self.nowFetching = false //decoding까지 끝났으므로 다시 api호출 중이 아니라는 것을 알려야 한다
+                    switch response.result {
+                    case .failure(let err):
+                        print(#fileID, #function, #line, "- err: \(err)")
+                    case .success(let data):
+                        print(#fileID, #function, #line, "- data checking: \(data)")
+                        self.todoListTableView.tableFooterView = nil
+                        
+                        var currentTodoListData = self.todoListData.value
+                        
+                        if let addedTodoData = data.data {
+                            //behaviorRelay.value는 getter만 가능 setter 불가능
 //                                    var addedTodoListData = self.todoListData.value.append(contentsOf: data.data ?? [])
-                                    var addedTodoListData = currentTodoListData + addedTodoData
-                                    self.todoListData.accept(addedTodoListData)
-                                }
-//                                self.todoListData.append(contentsOf: addedTodoListData)
-                                self.todoListTableView.reloadData()
-                            }
+                            var addedTodoListData = currentTodoListData + addedTodoData
+                            self.todoListData.accept(addedTodoListData)
                         }
+//                                self.todoListData.append(contentsOf: addedTodoListData)
+                        self.todoListTableView.reloadData()
+                    }
                 }
-            }
-            
         }
     }
-    
 }
 
 extension MainViewController : UITableViewDataSource {
