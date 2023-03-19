@@ -41,9 +41,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
     var selectedTodoData: [Int] = []
     
     //tableview에 들어갈 데이터목록
-//    var todoListData: [TodoAllData] = []
     var todoListData: BehaviorRelay<[TodoAllData]> = BehaviorRelay(value: [])
-//    var todoListData: Observable<[TodoAllData]> = Observable.just([])
     
     var disposeBag = DisposeBag()
     
@@ -56,11 +54,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
         // Do any additional setup after loading the view.
         //table View에 셀 등록해주기
         self.todoListTableView.register(TodoCell.uiNib, forCellReuseIdentifier: TodoCell.reuseIdentifier)
-        
-        //dataSource넣어주기
-//        self.todoListTableView.dataSource = self
-//        self.todoListTableView.delegate = self
-        
+
         //todoList목록 불러오기
         requestTodoData()
         
@@ -136,7 +130,6 @@ class MainViewController: UIViewController, UITableViewDelegate {
             )
             .disposed(by: disposeBag)
         
-        
     }
     
     
@@ -198,32 +191,6 @@ class MainViewController: UIViewController, UITableViewDelegate {
                     }
                 }
         }
-    }
-}
-
-extension MainViewController : UITableViewDataSource {
-    //몇개의 section인지
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print(#fileID, #function, #line, "- todoListData.count: \(self.todoListData.value.count)")
-        return todoListData.value.count
-    }
-    
-    //어떤 셀을 만들어줄건지
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let data = todoListData.value[indexPath.row]
-        print(#fileID, #function, #line, "- \(indexPath.section)")
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: TodoCell.reuseIdentifier, for: indexPath) as? TodoCell else { return UITableViewCell() }
-        
-        //데이터를 UI에 반영한다
-        //그리고 클로져의 장점 -> 함수를 변수로 사용 가능하다 그러므로 아래 extension을 통해서 정의해준 cellDeleteAction(todoId: Int) 함수를 변수의 형태로 전달해줄 수 있다
-        //이렇게 변수의 형태로 전달을 해주면 굳이 여기서 실행해줄 필요가 없음
-        cell.configureUI(data: data,
-                         indexPathRow: indexPath.row,
-                         deleteAction: cellDeleteAction,
-                         editAction: cellEditAction,
-                         selectedSwithAction: cellSelectedSwitch)
-        
-        return cell
     }
 }
 
