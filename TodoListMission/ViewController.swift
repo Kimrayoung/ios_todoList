@@ -16,7 +16,7 @@ extension Reactive where Base: UIScrollView {
     //바닥여부 체크하기
     
     //observable로 만들어서 scrollView의 y의 위치가 바닥에 닿는지 관찰할 수 있도록 만들어준다
-    //그리고 정확히 말하면 scrollView자체를 관찰하는 것이 아니라 scrollView의 contentOffset을 관찰해서 해당 위치를 보내주는 것이므로 map을 통해서 그거에 대한 처리를 한다
+    //정확히 말하면 scrollView자체를 관찰하는 변수가 아니라 scrollView의 contentOffset의 y축을 관찰해서 해당 위치를 보내주는 것이다 -> y축인지는 map인지를 통해서 그것만 관리하도록 한다
     //그럼 이걸 구독하면 바닥에 닿았을 때 이벤트가 발생하고 그 이벤트를 받아서 원하는 로직을 처리할 수 있다
     var didBottomReach: Observable<Bool> {
         return contentOffset
@@ -58,11 +58,38 @@ class MainViewController: UIViewController, UITableViewDelegate {
         self.todoListTableView.register(TodoCell.uiNib, forCellReuseIdentifier: TodoCell.reuseIdentifier)
         
         //dataSource넣어주기
-        self.todoListTableView.dataSource = self
-        self.todoListTableView.delegate = self
+//        self.todoListTableView.dataSource = self
+//        self.todoListTableView.delegate = self
         
         //todoList목록 불러오기
         requestTodoData()
+        
+        //BehaviorRelay는 반드시 초기값을 넣어줘야 해서 빈배열을 초기값으로 넣어줬으므로 구독을 하게 되면 반드시 초기값이 들어오게 된다
+        todoListData
+            .debug("⭐️ todoListObservable")
+            .subscribe { value in
+            print(#fileID, #function, #line, "- value: \(value)")
+        }
+            .disposed(by: disposeBag)
+        
+        //테이블뷰와 연관된 데이터를 테이블 뷰에 꽂아주기
+        //테이블뷰 cell을 만들어주는 함수가 items함수인데 그 함수의 configureCell부분이 클로저를 받는다
+        //그리고 그 클로저는 cell에 대한 정의를 해주는 부분인데 cell에 대한 정의를 이 부분을 통해서 해준다
+        todoListData.bind(to: todoListTableView.rx.items(cellIdentifier: TodoCell.reuseIdentifier, cellType: TodoCell.self)) {
+            (row, element, cell) in
+            print(#fileID, #function, #line, "- row checking: \(row)")
+            print(#fileID, #function, #line, "- element checking:\(element)")
+            
+            //데이터를 UI에 반영한다
+            //그리고 클로져의 장점 -> 함수를 변수로 사용 가능하다 그러므로 아래 extension을 통해서 정의해준 cellDeleteAction(todoId: Int) 함수를 변수의 형태로 전달해줄 수 있다
+            //이렇게 변수의 형태로 전달을 해주면 굳이 여기서 실행해줄 필요가 없음
+            cell.configureUI(data: element,
+                             indexPathRow: row,
+                             deleteAction: self.cellDeleteAction,
+                             editAction: self.cellEditAction,
+                             selectedSwithAction: self.cellSelectedSwitch)
+        }
+        .disposed(by: disposeBag)
         
         //선택된 할일 삭제 버튼 클릭시
         selectedDeleteBtn.rx.tap.bind {
@@ -83,14 +110,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
         }
         .disposed(by: disposeBag)
         
-        //BehaviorRelay는 반드시 초기값을 넣어줘야 해서 빈배열을 초기값으로 넣어줬으므로 구독을 하게 되면 반드시 초기값이 들어오게 된다
-        todoListData
-            .debug("⭐️ todoListObservable")
-            .subscribe { value in
-            print(#fileID, #function, #line, "- value: \(value)")
-        }
-            .disposed(by: disposeBag)
-        
+                
         todoListTableView
             .rx
             .didBottomReach
@@ -98,7 +118,6 @@ class MainViewController: UIViewController, UITableViewDelegate {
                 self.nowFetching == false //nowFetching이 true일 때만 들어온다
             }
             .debug("⭐️ didBottomReach")
-//            .filter{ $0 == true } //didBottomReach의 결과값이 true일 경우에만 아래 로직이 실행
             .subscribe(
                 onNext: { [weak self] didBottomReach in
                     guard let self = self else { return }
@@ -116,6 +135,7 @@ class MainViewController: UIViewController, UITableViewDelegate {
                 }
             )
             .disposed(by: disposeBag)
+        
         
     }
     
